@@ -102,7 +102,7 @@ dt{color:var(--mute)}dd{margin:0}
 const YN=['Yes','No'],YNU=['Yes','No','Unknown'],YNA=['Yes','No','Unknown','Not applicable'];
 // [key, label, type, options]  types: t text, p phone, n number, d date, h time, a textarea, c coded select (value = 1..n), s text select, m multi-check, g geo cascade (group:level)
 // Any option named Other/Others automatically opens a free-text box (saved as <key>_other).
-const VEH=['Bus','Minibus','Truck','Covered van','Pickup','Microbus','Car','Jeep','Motorcycle','Bicycle','Rickshaw','Rickshaw van','Easy bike (battery rickshaw)','Three wheeler (auto-rickshaw)','Human hauler (Leguna)','Tempo','Nosimon/Karimon','Tractor','Power tiller','Tanker','Lorry','Ambulance','Train','Bullock cart','Other'];
+const VEH=['Bus','Minibus','Truck','Covered van','Pickup','Microbus','Car','Jeep','Motorcycle','Bicycle','Rickshaw','Rickshaw van','Easy bike (battery rickshaw)','Three wheeler (CNG)','Human hauler (Leguna)','Tempo','Nosimon/Karimon','Tractor','Power tiller','Tanker','Lorry','Ambulance','Train','Bullock cart','Other'];
 const S=[
 ['Identification & sociodemographic',[
 ['study_id','Study ID (anonymous code)','t'],['age','Age (years)','n'],['phone','Phone number','p'],
@@ -113,11 +113,12 @@ const S=[
 ['Accident & technical details',[
 ['accident_id','Accident ID','t'],
 ['accident_date','Date of accident','d'],
-['arrival_condition','Condition on arrival','c',['Brought dead','Expired']],
-['day_of_week','Day of week (auto)','t'],['accident_time','Time of accident','h'],['arrival_time','Time of arrival','h'],['incident_time','Time of incident','h'],
+['arrival_condition','Condition on arrival','c',['Alive','Brought dead','Expired']],
+['day_of_week','Day of week (auto)','t'],['accident_time','Time of accident','h'],['arrival_time','Time of arrival','h'],['incident_time','Time of initiation','h'],
 ['accident_district','Accident location — District','g','acc:0'],['accident_upazila','Upazila','g','acc:1'],['accident_thana','Thana (CMP)','g','acc:2'],
 ['location_type','Location type','c',['Intersection','Straight road','Curve','Bridge','Other']],
 ['road_type','Road type','c',['Highway','Arterial','Local/urban road','Rural','Other']],
+['road_name','Road name','t'],
 ['lighting','Lighting condition','c',['Daylight','Night with street lighting','Night without adequate lighting']],
 ['weather','Weather','c',['Clear','Rainy','Foggy','Other']],
 ['road_surface','Road surface','c',['Dry','Wet','Damaged/poor','Other']],
@@ -138,10 +139,15 @@ const S=[
 ['referred','Referred from another hospital?','s',YN],['referred_place','Referred place','t'],['icu','ICU admission','s',YN],
 ['surgery_required','Surgery required','s',YN],['transfusion','Blood transfusion','s',YN],['n_transfusion','No. of blood transfusions','t']]],
 ['Injury & severity assessment',[
-['injury_area','Injury area (select all that apply)','m',['Head and neck','Face','Thorax','Abdomen and pelvic contents','Extremities and pelvic girdle','External (integument)']],
+['ais_headneck','AIS region — Head & neck (0–6, by doctor)','n',[0,6]],
+['ais_face','AIS region — Face (0–6, by doctor)','n',[0,6]],
+['ais_thorax','AIS region — Thorax (0–6, by doctor)','n',[0,6]],
+['ais_abdomen','AIS region — Abdomen and pelvic contents (0–6, by doctor)','n',[0,6]],
+['ais_extremities','AIS region — Extremities and pelvic girdle (0–6, by doctor)','n',[0,6]],
+['ais_skin','AIS region — External/skin (0–6, by doctor)','n',[0,6]],
 ['injury_types','Injury types (select all that apply)','m',['Abrasion','Contusion','Laceration','Incised wound','Penetrating/puncture wound','Avulsion','Fracture','Dislocation','Crush injury','Traumatic amputation','Burn','Concussion/traumatic brain injury','Intracranial haemorrhage','Haemothorax/pneumothorax','Solid/hollow viscus injury','Spinal cord injury','Other']],
 ['shock_type','Treatment of shock','c',['Hemorrhagic','Hypovolemic','Obstructive','Neurogenic']],
-['gcs','GCS at admission (3–15)','n',[3,15]],['iss','ISS (0–75)','n',[0,75]],
+['gcs','GCS at admission (3–15)','n',[3,15]],['iss','ISS (0–75) (auto)','n',[0,75]],
 ['body_region','Major body region injured','t'],['multiple_injuries','Multiple injuries','s',YN],['n_surgeries','No. of surgeries performed','t']]],
 ['Management and hospital outcome',[
 ['outcome','Final outcome','c',['Survived','Died']],
@@ -254,7 +260,7 @@ function ctl([k,l,t,o]){
   if(t=='a')return `<textarea name="${k}" rows="2"></textarea>`;
   if(t=='m')return `<div class="chk">${o.map(x=>`<label><input type="checkbox" name="${k}" value="${x}">${x}</label>`).join('')}</div>${ot}`;
   if(t=='g')return `<select name="${k}" data-g="${o}"></select><input name="${k}_other" type="text" placeholder="Type name" hidden>`;
-  return `<input name="${k}" type="${T[t]}"${t=='n'?` step="any" min="${o?o[0]:0}"${o?` max="${o[1]}"`:''}`:''}${k=='study_id'?' required':''}>`;
+  return `<input name="${k}" type="${T[t]}"${t=='n'?` step="any" min="${o?o[0]:0}"${o?` max="${o[1]}"`:''}`:''}${k=='study_id'?' required':''}${k=='iss'?' readonly':''}>`;
 }
 $('f').innerHTML=S.map(([t,fs],i)=>`<fieldset><legend>${i+1}. ${t}</legend><div class="g">${fs.map(f=>`<${f[2]=='m'?'div':'label'} class="fl${f[2]=='m'||f[2]=='a'?' w':''}">${f[1]}${ctl(f)}</${f[2]=='m'?'div':'label'}>`).join('')}</div></fieldset>`).join('')
   +`<div class="sv"><span class="editnote" id="editNote" hidden></span><button class="b" type="submit" id="saveBtn">Save patient</button><button class="b o" type="button" id="cancelEdit" hidden>Cancel edit</button><button class="b o" type="reset">Clear form</button></div>`;
@@ -293,8 +299,14 @@ f.addEventListener('change',e=>{
 });
 
 // auto-filled fields
+const AIS_KEYS=['ais_headneck','ais_face','ais_thorax','ais_abdomen','ais_extremities','ais_skin'];
+function computeISS(){
+  const vals=AIS_KEYS.map(k=>+v(k)||0);
+  f.elements.iss.value=vals.some(x=>x>=6)?75:[...vals].sort((a,b)=>b-a).slice(0,3).reduce((s,x)=>s+x*x,0);
+}
 f.addEventListener('input',e=>{
   if(e.target.name=='n_vehicles')vehVis();
+  if(AIS_KEYS.includes(e.target.name))computeISS();
   if(!['accident_date','accident_time','arrival_time'].includes(e.target.name))return;
   if(v('accident_date'))f.elements.day_of_week.value=new Date(v('accident_date')+'T00:00').toLocaleDateString('en-US',{weekday:'long'});
   if(v('accident_time')&&v('arrival_time'))f.elements.minutes_to_hospital.value=(hm(v('arrival_time'))-hm(v('accident_time'))+1440)%1440;
@@ -317,7 +329,7 @@ function startEdit(p){
   });
   EX.forEach(k=>f.elements[k+'_other'].value=p[k+'_other']??'');
   for(const g in GL)GL[g].forEach((k,i)=>setGeo(g,i,p[k]));
-  vehVis();syncOther();
+  vehVis();syncOther();computeISS();
   updateEditUI();f.elements.study_id.focus();
 }
 function stopEdit(){editing=null;f.reset();updateEditUI()}
