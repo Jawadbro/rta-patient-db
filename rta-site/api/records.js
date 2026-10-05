@@ -30,6 +30,10 @@ export default async function handler(req, res) {
       body: req.method === 'GET' ? undefined : JSON.stringify(req.body),
     });
     const text = await r.text();
+    // NocoDB rejecting the token must not look like a wrong site password
+    if (r.status === 401 || r.status === 403) {
+      return res.status(502).json({ error: `NocoDB rejected the token (HTTP ${r.status}). Check NOCODB_TOKEN and that it belongs to the same base as the table.` });
+    }
     res.status(r.status).setHeader('Content-Type', 'application/json').send(text || '{}');
   } catch {
     res.status(502).json({ error: 'Upstream request failed' });
